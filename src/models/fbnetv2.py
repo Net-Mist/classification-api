@@ -62,8 +62,8 @@ class ChannelMasking(tf.keras.layers.Layer):
     self.binary_vectors = create_binary_vector(self.channel_sizes, dtype=self.alpha.dtype)
 
   def call(self, inputs):
-    g = gumbel_softmax(self.alpha)
-    mask = get_mask(self.binary_vectors,  g)
+    self.g = gumbel_softmax(self.alpha)
+    mask = get_mask(self.binary_vectors,  self.g)
 
     # work with channel last but not channel first
     if tf.keras.backend.image_data_format() == 'channels_first':
