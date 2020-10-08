@@ -10,6 +10,7 @@ import tensorflow as tf
 import upstride_argparse as argparse
 from src.argument_parser import training_arguments_das
 from src.data import dataloader
+from src import losses
 from src.models import model_name_to_class
 from src.models.generic_model import framework_list
 from src.utils import check_folder, get_imagenet_data, model_dir
@@ -144,6 +145,9 @@ def train(args):
         with tf.GradientTape() as tape:
             y_hat = model(x_batch, training=True)
             loss = loss_fn(y_batch, y_hat)
+            # TODO ? add L1/L2 regularization loss
+            # add regularization loss
+            loss += losses.flops_loss(model) / 1.0e9
 
         accuracy_metric.update_state(y_batch, y_hat)
         loss_metric.update_state(loss)
