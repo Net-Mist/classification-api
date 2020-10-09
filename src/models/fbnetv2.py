@@ -37,6 +37,15 @@ def gumbel_softmax(alpha):
   exps_sum = tf.reduce_sum(exps)
   return exps / exps_sum
 
+def gumbel_softmax2(logits):
+    global temperature
+    u = tf.random.uniform(minval=0.0, maxval=1.0, shape=tf.shape(logits))
+    gumbel = -tf.math.log(-tf.math.log(u))
+
+    noisy_logits = (gumbel + logits) / temperature
+
+    return tf.math.softmax(noisy_logits)
+
 
 def get_mask(binary_vectors: List[tf.Tensor], g: List[float]):
   vectors = [g[i] * binary_vectors[i] for i in range(len(g))]
@@ -62,7 +71,7 @@ class ChannelMasking(tf.keras.layers.Layer):
     self.binary_vectors = create_binary_vector(self.channel_sizes, dtype=self.alpha.dtype)
 
   def call(self, inputs):
-    self.g = gumbel_softmax(self.alpha)
+    self.g = gumbel_softmax2(self.alpha)
     mask = get_mask(self.binary_vectors,  self.g)
 
     # work with channel last but not channel first
