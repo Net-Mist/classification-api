@@ -8,7 +8,7 @@ class TestLosses(unittest.TestCase):
   def test_flops_loss(self):
     model = tf.keras.Sequential([
         tf.keras.layers.Conv2D(3, (3, 3), padding='same', use_bias=False),
-        ChannelMasking(1, 3, 1, "hello")
+        ChannelMasking(1, 3, 1, "hello", gumble_noise=False)
     ])
 
     model(tf.zeros((1, 24, 24, 3), dtype=tf.float32))
@@ -33,7 +33,7 @@ class TestLosses(unittest.TestCase):
     model = tf.keras.Sequential([
         tf.keras.layers.Conv2D(3, (3, 3), padding='same', use_bias=False),
         tf.keras.layers.ReLU(),
-        ChannelMasking(1, 3, 1, "hello")
+        ChannelMasking(1, 3, 1, "hello", gumble_noise=False)
     ])
     model(tf.zeros((1, 24, 24, 3), dtype=tf.float32))
     l = flops_loss(model)

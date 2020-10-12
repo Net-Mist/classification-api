@@ -30,21 +30,17 @@ def create_binary_vector(channel_sizes: List[int], dtype) -> List[tf.Tensor]:
   return binary_vectors
 
 
-def gumbel_softmax(alpha):
+def gumbel_softmax(logits, gumble_noise=True):
+  """please have a look at https://arxiv.org/pdf/1611.01144.pdf for gumble definition
+  """
   global temperature
-  noise = 0.0001
-  exps = tf.math.exp((alpha + noise) / temperature)
-  exps_sum = tf.reduce_sum(exps)
-  return exps / exps_sum
-
-def gumbel_softmax2(logits):
-    global temperature
+  if gumble_noise:
     u = tf.random.uniform(minval=0.0, maxval=1.0, shape=tf.shape(logits))
-    gumbel = -tf.math.log(-tf.math.log(u))
-
-    noisy_logits = (gumbel + logits) / temperature
-
-    return tf.math.softmax(noisy_logits)
+    noise = -tf.math.log(-tf.math.log(u))
+  else:
+    noise = 0.0001
+  noisy_logits = (noise + logits) / temperature
+  return tf.math.softmax(noisy_logits)
 
 
 def get_mask(binary_vectors: List[tf.Tensor], g: List[float]):
@@ -55,12 +51,13 @@ def get_mask(binary_vectors: List[tf.Tensor], g: List[float]):
 
 
 class ChannelMasking(tf.keras.layers.Layer):
-  def __init__(self, min: int, max: int, step: int, name: str):
+  def __init__(self, min: int, max: int, step: int, name: str, gumble_noise=True):
     super().__init__(name=name)
     self.min = min
     self.max = max
     self.step = step
     self.channel_sizes = []
+    self.gumble_noise = gumble_noise
     for i in range(self.min, self.max+1, self.step):
       self.channel_sizes.append(i)
 
@@ -71,7 +68,7 @@ class ChannelMasking(tf.keras.layers.Layer):
     self.binary_vectors = create_binary_vector(self.channel_sizes, dtype=self.alpha.dtype)
 
   def call(self, inputs):
-    self.g = gumbel_softmax2(self.alpha)
+    self.g = gumbel_softmax(self.alpha, self.gumble_noise)
     mask = get_mask(self.binary_vectors,  self.g)
 
     # work with channel last but not channel first

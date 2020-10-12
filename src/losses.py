@@ -48,8 +48,7 @@ def flops_loss(model):
       # flops is the number of flops of the channel just before ChannelMasking
       g = layer.g
       param_ratio = [flops * (layer.min + i * layer.step)/layer.max for i in range(layer.g.shape[0])]
-
-      loss += tf.math.reduce_mean(g * tf.convert_to_tensor(param_ratio))
+      loss += tf.math.reduce_sum(g * tf.convert_to_tensor(param_ratio))
   return loss
 
 
@@ -62,7 +61,5 @@ def parameters_loss(model):
       # parameters are the number of parameters of the channel just before ChannelMasking
       g = layer.g
       param_ratio = [n_params * (layer.min + i * layer.step)/layer.max for i in range(g.shape[0])]
-
-      loss += tf.math.reduce_mean(g * tf.convert_to_tensor(param_ratio))
-      
+      loss += tf.math.reduce_sum(g * tf.convert_to_tensor(param_ratio))
   return loss
